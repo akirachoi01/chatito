@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Added useEffect
 import {
   BrowserRouter,
   Routes,
@@ -10,12 +10,21 @@ import {
 } from "react-router";
 import { nanoid } from "nanoid";
 
-import { names, type ChatMessage, type Message } from "../shared";
+import { /* names, */ type ChatMessage, type Message } from "../shared"; // Removed 'names' import
 
 function App() {
-  const [name] = useState(names[Math.floor(Math.random() * names.length)]);
+  // Use null as initial state for name, indicating no name has been set yet
+  const [name, setName] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { room } = useParams();
+
+  // Load name from localStorage on initial render
+  useEffect(() => {
+    const storedName = localStorage.getItem("chatUserName");
+    if (storedName) {
+      setName(storedName);
+    }
+  }, []);
 
   const socket = usePartySocket({
     party: "chat",
@@ -25,7 +34,6 @@ function App() {
       if (message.type === "add") {
         const foundIndex = messages.findIndex((m) => m.id === message.id);
         if (foundIndex === -1) {
-          // probably someone else who added a message
           setMessages((messages) => [
             ...messages,
             {
@@ -36,9 +44,6 @@ function App() {
             },
           ]);
         } else {
-          // this usually means we ourselves added a message
-          // and it was broadcasted back
-          // so let's replace the message with the new message
           setMessages((messages) => {
             return messages
               .slice(0, foundIndex)
@@ -70,6 +75,45 @@ function App() {
     },
   });
 
+  // Function to handle setting the user's name
+  const handleSetName = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const input = e.currentTarget.elements.namedItem(
+      "userName",
+    ) as HTMLInputElement;
+    const newName = input.value.trim();
+    if (newName) {
+      setName(newName);
+      localStorage.setItem("chatUserName", newName); // Save to localStorage
+    }
+  };
+
+  // Conditional rendering: Show name input if no name is set, otherwise show chat
+  if (!name) {
+    return (
+      <div className="container" style={{ marginTop: "25%" }}>
+        <div className="row">
+          <div className="one-third column">
+            <h4><b>Set Your Name</b></h4>
+            <p>Please enter your desired name to join the chat.</p>
+            <form onSubmit={handleSetName}>
+              <input
+                type="text"
+                name="userName"
+                className="u-full-width"
+                placeholder="Enter your name"
+                autoComplete="off"
+                required
+              />
+              <button type="submit" className="button-primary">Join Chat</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render chat interface if name is set
   return (
     <div className="chat container">
       {messages.map((message) => (
@@ -88,11 +132,10 @@ function App() {
           const chatMessage: ChatMessage = {
             id: nanoid(8),
             content: content.value,
-            user: name,
+            user: name, // Use the user's set name
             role: "user",
           };
           setMessages((messages) => [...messages, chatMessage]);
-          // we could broadcast the message here
 
           socket.send(
             JSON.stringify({
