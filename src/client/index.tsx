@@ -17,6 +17,7 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { room } = useParams();
 
+  // Load name from localStorage
   useEffect(() => {
     const storedName = localStorage.getItem("chatUserName");
     if (storedName) {
@@ -115,7 +116,13 @@ function App() {
         <div key={message.id} className="row message">
           <div
             className="two columns user"
-            style={{ fontWeight: "bold", color: "#2c3e50" }} // BOLD & COLORED NAME
+            style={{
+              fontWeight: "bold",
+              color: "#2c3e50", // Name color
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
           >
             {message.user}
           </div>
@@ -162,7 +169,7 @@ function App() {
   );
 }
 
-// Render the app
+// Render the chat app using React 18+
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <Routes>
