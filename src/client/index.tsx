@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
-import React, { useState, useEffect } from "react"; // Added useEffect
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -10,15 +10,13 @@ import {
 } from "react-router";
 import { nanoid } from "nanoid";
 
-import { /* names, */ type ChatMessage, type Message } from "../shared"; // Removed 'names' import
+import { type ChatMessage, type Message } from "../shared";
 
 function App() {
-  // Use null as initial state for name, indicating no name has been set yet
   const [name, setName] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { room } = useParams();
 
-  // Load name from localStorage on initial render
   useEffect(() => {
     const storedName = localStorage.getItem("chatUserName");
     if (storedName) {
@@ -75,7 +73,6 @@ function App() {
     },
   });
 
-  // Function to handle setting the user's name
   const handleSetName = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const input = e.currentTarget.elements.namedItem(
@@ -84,11 +81,10 @@ function App() {
     const newName = input.value.trim();
     if (newName) {
       setName(newName);
-      localStorage.setItem("chatUserName", newName); // Save to localStorage
+      localStorage.setItem("chatUserName", newName);
     }
   };
 
-  // Conditional rendering: Show name input if no name is set, otherwise show chat
   if (!name) {
     return (
       <div className="container" style={{ marginTop: "25%" }}>
@@ -113,12 +109,16 @@ function App() {
     );
   }
 
-  // Render chat interface if name is set
   return (
     <div className="chat container">
       {messages.map((message) => (
         <div key={message.id} className="row message">
-          <div className="two columns user">{message.user}</div>
+          <div
+            className="two columns user"
+            style={{ fontWeight: "bold", color: "#2c3e50" }} // BOLD & COLORED NAME
+          >
+            {message.user}
+          </div>
           <div className="ten columns">{message.content}</div>
         </div>
       ))}
@@ -132,7 +132,7 @@ function App() {
           const chatMessage: ChatMessage = {
             id: nanoid(8),
             content: content.value,
-            user: name, // Use the user's set name
+            user: name,
             role: "user",
           };
           setMessages((messages) => [...messages, chatMessage]);
@@ -162,7 +162,7 @@ function App() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+// Render the app
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <Routes>
